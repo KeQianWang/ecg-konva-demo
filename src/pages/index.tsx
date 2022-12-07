@@ -2,6 +2,8 @@ import styles from './index.less';
 import { Stage, Layer, Text, Line, Group, Circle } from 'react-konva';
 // @ts-ignore
 import { pointsData } from '@/utils/utils';
+import OrderInfo from '@/pages/components/order-info';
+
 export default function IndexPage() {
   const scale = 1; // 倍数阈值
   const step = 0.3 * scale; // 波线点间距阈值
@@ -18,6 +20,8 @@ export default function IndexPage() {
     stageWidth: Math.max(width, window.innerWidth - 10),
     height: 250,
   };
+
+  const configParams = { time: '50', voltage: '20' };
 
   // 垂直线
   const drawGirdX = () => {
@@ -76,9 +80,17 @@ export default function IndexPage() {
     return points;
   };
 
+  const handleChange = (type: any, value: any) => {
+    if (type === 'time') {
+      console.log('time change:', value);
+    } else if (type === 'voltage') {
+      console.log('voltage change:', value);
+    }
+  };
+
   return (
     <div>
-      <h1 className={styles.title}>Page index</h1>
+      <OrderInfo value={configParams} onChange={handleChange}></OrderInfo>
       <Stage width={init.stageWidth} height={init.height}>
         <Layer>
           <Group name="groupGrid">
