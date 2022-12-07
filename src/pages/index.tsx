@@ -1,27 +1,24 @@
-import styles from './index.less';
-import { Stage, Layer, Text, Line, Group, Circle } from 'react-konva';
+import { Stage, Layer, Line, Group } from 'react-konva';
 // @ts-ignore
-import { pointsData } from '@/utils/utils';
+import { pointsData } from "../utils/utils";
 import OrderInfo from '@/pages/components/order-info';
+import _ from 'lodash';
+import { useState } from 'react';
 
 export default function IndexPage() {
-  const scale = 1; // 倍数阈值
-  const step = 0.3 * scale; // 波线点间距阈值
   const sampleRate = 500; //采样率（每秒采集数
   const voltage = 0.002; //电压
   // X倍数阈值
   const gridSizeX = 6; //每小格（X轴 0.04/秒，每秒25个
   // Y倍数阈值
   const gridSizeY = 6; //每小格（Y轴 0.1/mv，1mv是2个大格
+  const [xAxis, setXAxis] = useState(50); // time
+  const [yAxis, setYAxis] = useState(10); // voltage
 
-  const width = ~~(pointsData.length / sampleRate) * 25 * gridSizeX;
   let init = {
-    width,
-    stageWidth: Math.max(width, window.innerWidth - 10),
-    height: 250,
+    width:~~(pointsData.length / sampleRate) * xAxis * gridSizeX,
+    height: Math.abs(_.maxBy(pointsData, (o:number) =>Math.abs(o))),
   };
-
-  const configParams = { time: '50', voltage: '20' };
 
   // 垂直线
   const drawGirdX = () => {
@@ -29,13 +26,12 @@ export default function IndexPage() {
       pointsData.length *
       gridSizeX *
       +(init.width / pointsData.length).toFixed(2);
-    const height = 180;
     let items = [];
     for (let x = 0, g = 0; x <= width; x += ~~gridSizeX, g++) {
       items.push(
         <Line
           key={x}
-          points={[x, 0, x, height]}
+          points={[x, 0, x, init.height]}
           stroke={g % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
           strokeWidth={1}
           offsetX={-0.5}
@@ -44,15 +40,15 @@ export default function IndexPage() {
     }
     return items;
   };
+
   // 水平线（高度不随着倍数变化
   const drawGirdY = () => {
     const width =
       pointsData.length *
       gridSizeX *
       +(init.width / pointsData.length).toFixed(2);
-    const height = 180;
     let items = [];
-    for (let y = 0, f = 0; y <= height; y += ~~gridSizeY, f++) {
+    for (let y = 0, f = 0; y <= init.height; y += ~~gridSizeY, f++) {
       items.push(
         <Line
           key={y}
@@ -68,9 +64,8 @@ export default function IndexPage() {
 
   const drawLine = () => {
     let points: any = [];
-    const width = init.width;
-    let positionX = +(width / pointsData.length).toFixed(2);
-    let positionY = voltage * 10 * gridSizeY;
+    let positionX = +(init.width / pointsData.length).toFixed(2);
+    let positionY = voltage * yAxis * gridSizeY;
     for (let i = 0; i < pointsData.length; i++) {
       let x = i * positionX;
       let y = 90 - positionY * pointsData[i];
@@ -82,16 +77,16 @@ export default function IndexPage() {
 
   const handleChange = (type: any, value: any) => {
     if (type === 'time') {
-      console.log('time change:', value);
+      setXAxis(value)
     } else if (type === 'voltage') {
-      console.log('voltage change:', value);
+      setYAxis(value)
     }
   };
 
   return (
     <div>
-      <OrderInfo value={configParams} onChange={handleChange}></OrderInfo>
-      <Stage width={init.stageWidth} height={init.height}>
+      <OrderInfo value={{ time: xAxis, voltage: yAxis }} onChange={handleChange}/>
+      <Stage width={init.width} height={init.height}>
         <Layer>
           <Group name="groupGrid">
             {drawGirdX()}

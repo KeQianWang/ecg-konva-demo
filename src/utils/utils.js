@@ -1,4 +1,4 @@
-export const pointsData =[
+export const pointsData = [
   -369,
   -372,
   -372,
