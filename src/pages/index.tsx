@@ -1,4 +1,4 @@
-import { Stage, Layer, Line, Group } from 'react-konva';
+import { Stage, Layer, Line, Group,Circle } from 'react-konva';
 // @ts-ignore
 import { pointsData } from "../utils/utils";
 import OrderInfo from '@/pages/components/order-info';
@@ -62,6 +62,53 @@ export default function IndexPage() {
     return items;
   };
 
+  const drawRulerX = ()=>{
+    const width =
+      pointsData.length *
+      gridSizeX *
+      +(init.width / pointsData.length).toFixed(2);
+    return (
+      <Line
+        points={[0, init.height, width, init.height]}
+        stroke={'red'}
+        strokeWidth={4}
+        offsetX={-0.5}
+      />
+    )
+  }
+
+  const data = () =>{
+    if(xAxis===50){
+      return 50
+    }else if (xAxis === 25){
+      return 25
+    }else {
+      return 12.5
+    }
+  }
+
+  const drawRulerY = ()=>{
+    const width =
+      pointsData.length *
+      gridSizeX *
+      +(init.width / pointsData.length).toFixed(2);
+    let ruler = [];
+    for (let x = 0, g = 0; x <= width; x += ~~gridSizeX, g+=data()) {
+      ruler.push(
+        <Circle
+          key={x}
+          x={g*6}
+          y={init.height}
+          radius={4}
+          fill={'red'}
+          stroke={'black'}
+          strokeWidth={4}
+        />,
+      )
+    }
+    return ruler;
+  }
+
   const drawLine = () => {
     let points: any = [];
     let positionX = +(init.width / pointsData.length).toFixed(2);
@@ -77,9 +124,9 @@ export default function IndexPage() {
 
   const handleChange = (type: any, value: any) => {
     if (type === 'time') {
-      setXAxis(value)
+      setXAxis(+value)
     } else if (type === 'voltage') {
-      setYAxis(value)
+      setYAxis(+value)
     }
   };
 
@@ -91,6 +138,8 @@ export default function IndexPage() {
           <Group name="groupGrid">
             {drawGirdX()}
             {drawGirdY()}
+            {drawRulerX()}
+            {drawRulerY()}
           </Group>
         </Layer>
         <Layer>
