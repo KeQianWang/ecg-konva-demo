@@ -33,7 +33,7 @@ export default function IndexPage() {
   const { minValue, maxValue } = getPixelValues(pointsData);
   let init = {
     width: ~~(pointsData.length / sampleRate) * xAxis * gridSizeX,
-    height: Math.max(Math.abs(maxValue), Math.abs(minValue)),
+    height: Math.max(Math.abs(maxValue), Math.abs(minValue)) / 2,
   };
 
   // x 刻度线
@@ -43,9 +43,9 @@ export default function IndexPage() {
         key={index + '_t'}
         text={text + 's'}
         fontStyle={'bold'}
-        x={x}
+        x={x - 25}
         y={init.height - 4 * gridSizeX - 15}
-        width={20}
+        width={50}
         align={'center'}
         fill={'#f00'}
       />
@@ -60,28 +60,36 @@ export default function IndexPage() {
       x <= init.width;
       x += ~~gridSizeX, g++, xBar += xAxis
     ) {
-      items.push(
-        <Line
-          key={x}
-          points={[x, 0, x, init.height]}
-          stroke={g % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
-          strokeWidth={1}
-          offsetX={-0.5}
-        />,
+      if (x % gridSizeX === 0) {
+        items.push(
+          <Line
+            key={x}
+            points={[x, 0, x, init.height]}
+            stroke={g % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
+            strokeWidth={1}
+            offsetX={-0.5}
+          />,
+        );
+      }
+
+      if (x % gridSizeX === 0) {
+        const isBig = x % (xAxis * gridSizeX) === 0;
         // 刻度
-        <Line
-          key={g + '_l'}
-          points={[
-            xBar * 6,
-            init.height,
-            xBar * 6,
-            init.height - 4 * gridSizeX,
-          ]}
-          strokeWidth={1}
-          stroke={'#f00'}
-        />,
-        addAxisXText(g, g, xBar * 6 - 10),
-      );
+        items.push(
+          <Line
+            key={g + '_l'}
+            points={[
+              x,
+              init.height,
+              x,
+              init.height - (isBig ? 4 : 2) * gridSizeX,
+            ]}
+            strokeWidth={1}
+            stroke={'#f00'}
+          />,
+          isBig && addAxisXText(g, x / xAxis / gridSizeX, x),
+        );
+      }
     }
     return items;
   };
@@ -93,7 +101,7 @@ export default function IndexPage() {
       items.push(
         <Line
           key={y}
-          points={[0, y,  init.width, y]}
+          points={[0, y, init.width, y]}
           stroke={y % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
           strokeWidth={1}
           offsetX={-0.5}
