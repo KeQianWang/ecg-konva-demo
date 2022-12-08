@@ -30,10 +30,13 @@ export default function IndexPage() {
   const [xAxis, setXAxis] = useState(25); // time
   const [yAxis, setYAxis] = useState(10); // voltage
 
+  const totalTime = pointsData.length / sampleRate;
   const { minValue, maxValue } = getPixelValues(pointsData);
   let init = {
-    width: ~~(pointsData.length / sampleRate) * xAxis * gridSizeX,
-    height: Math.max(Math.abs(maxValue), Math.abs(minValue)) / 2,
+    width: xAxis * gridSizeX * totalTime,
+    height: Math.max(Math.abs(maxValue), Math.abs(minValue)),
+    pxPerMS: (xAxis * gridSizeX) / 10,
+    positionY: maxValue,
   };
 
   // x 刻度线
@@ -71,25 +74,6 @@ export default function IndexPage() {
           />,
         );
       }
-
-      if (x % gridSizeX === 0) {
-        const isBig = x % (xAxis * gridSizeX) === 0;
-        // 刻度
-        items.push(
-          <Line
-            key={g + '_l'}
-            points={[
-              x,
-              init.height,
-              x,
-              init.height - (isBig ? 4 : 2) * gridSizeX,
-            ]}
-            strokeWidth={1}
-            stroke={'#f00'}
-          />,
-          isBig && addAxisXText(g, x / xAxis / gridSizeX, x),
-        );
-      }
     }
     return items;
   };
@@ -112,14 +96,35 @@ export default function IndexPage() {
   };
 
   const drawRulerX = () => {
-    return (
+    let items: any = [];
+    for (let x = 0; x <= init.width; x += init.pxPerMS) {
+      const isBig = x % (xAxis * gridSizeX) === 0;
+      // 刻度
+      items.push(
+        <Line
+          key={x + '_l'}
+          points={[
+            x,
+            init.height,
+            x,
+            init.height - (isBig ? 4 : 2) * gridSizeX,
+          ]}
+          strokeWidth={1}
+          stroke={'#f00'}
+        />,
+        isBig && addAxisXText(x, x / xAxis / gridSizeX, x),
+      );
+    }
+    items.push(
       <Line
+        key={'rx'}
         points={[0, init.height, init.width, init.height]}
         stroke={'red'}
         strokeWidth={4}
         offsetX={-0.5}
-      />
+      />,
     );
+    return items;
   };
 
   const drawLine = () => {
@@ -128,7 +133,8 @@ export default function IndexPage() {
     let positionY = voltage * yAxis * gridSizeY;
     for (let i = 0; i < pointsData.length; i++) {
       let x = i * positionX;
-      let y = 90 - positionY * pointsData[i];
+      // 帅哥默认90 改为 init.positionY/2
+      let y = init.positionY / 2 - positionY * pointsData[i];
       points.push(x);
       points.push(y);
     }
@@ -149,7 +155,7 @@ export default function IndexPage() {
         value={{ time: xAxis, voltage: yAxis }}
         onChange={handleChange}
       />
-      <Stage width={init.width} height={init.height}>
+      <Stage width={init.width + 10} height={init.height} x={10}>
         <Layer>
           <Group name="groupGrid">
             {drawGirdX()}
