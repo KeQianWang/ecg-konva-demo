@@ -1,9 +1,24 @@
-import { Stage, Layer, Line, Group,Circle } from 'react-konva';
+import { Stage, Layer, Line, Group, Text } from 'react-konva';
 // @ts-ignore
-import { pointsData } from "../utils/utils";
+import { pointsData } from '../utils/utils';
 import OrderInfo from '@/pages/components/order-info';
-import _ from 'lodash';
 import { useState } from 'react';
+
+const getPixelValues = (pixelData: any) => {
+  let minPixelValue: number = Number.MAX_VALUE;
+  let maxPixelValue: number = Number.MIN_VALUE;
+  let len = pixelData.length;
+  let pixel: number;
+  for (let i = 0; i < len; i++) {
+    pixel = pixelData[i];
+    minPixelValue = minPixelValue < pixel ? minPixelValue : pixel;
+    maxPixelValue = maxPixelValue > pixel ? maxPixelValue : pixel;
+  }
+  return {
+    minValue: minPixelValue,
+    maxValue: maxPixelValue,
+  };
+};
 
 export default function IndexPage() {
   const sampleRate = 500; //采样率（每秒采集数
@@ -15,9 +30,26 @@ export default function IndexPage() {
   const [xAxis, setXAxis] = useState(50); // time
   const [yAxis, setYAxis] = useState(10); // voltage
 
+  const { minValue, maxValue } = getPixelValues(pointsData);
   let init = {
-    width:~~(pointsData.length / sampleRate) * xAxis * gridSizeX,
-    height: Math.abs(_.maxBy(pointsData, (o:number) =>Math.abs(o))),
+    width: ~~(pointsData.length / sampleRate) * xAxis * gridSizeX,
+    height: Math.max(Math.abs(maxValue), Math.abs(minValue)),
+  };
+
+  // x 刻度线
+  const addAxisXText = (index: any, text: any, x: any) => {
+    return (
+      <Text
+        key={index + '_t'}
+        text={text + 's'}
+        fontStyle={'bold'}
+        x={x}
+        y={init.height - 4 * gridSizeX - 15}
+        width={20}
+        align={'center'}
+        fill={'#f00'}
+      />
+    );
   };
 
   // 垂直线
@@ -27,7 +59,16 @@ export default function IndexPage() {
       gridSizeX *
       +(init.width / pointsData.length).toFixed(2);
     let items = [];
-    for (let x = 0, g = 0; x <= width; x += ~~gridSizeX, g++) {
+    const lineY = init.height - 2 * gridSizeX;
+    const lineBigY = init.height - 4 * gridSizeX;
+
+    // console.log(width, gridSizeX, width/gridSizeX);
+    for (
+      let x = 0, g = 0, xBar = 0;
+      x <= width;
+      x += ~~gridSizeX, g++, xBar += xAxis
+    ) {
+      console.log(444);
       items.push(
         <Line
           key={x}
@@ -36,6 +77,26 @@ export default function IndexPage() {
           strokeWidth={1}
           offsetX={-0.5}
         />,
+        // 刻度
+
+        // g % 5 === 0 && <Line
+        //   key={x+ '_l'}
+        //   points={[x+2, init.height, x+2, g % 50 === 0?lineBigY: lineY]}
+        //   strokeWidth={1}
+        //   stroke={'#00f'}
+        // />,
+        <Line
+          key={g + '_l'}
+          points={[
+            xBar * 6,
+            init.height,
+            xBar * 6,
+            init.height - 4 * gridSizeX,
+          ]}
+          strokeWidth={1}
+          stroke={'#f00'}
+        />,
+        addAxisXText(g, g, xBar * 6 - 10),
       );
     }
     return items;
@@ -62,7 +123,7 @@ export default function IndexPage() {
     return items;
   };
 
-  const drawRulerX = ()=>{
+  const drawRulerX = () => {
     const width =
       pointsData.length *
       gridSizeX *
@@ -74,40 +135,32 @@ export default function IndexPage() {
         strokeWidth={4}
         offsetX={-0.5}
       />
-    )
-  }
-
-  const data = () =>{
-    if(xAxis===50){
-      return 50
-    }else if (xAxis === 25){
-      return 25
-    }else {
-      return 12.5
-    }
-  }
-
-  const drawRulerY = ()=>{
+    );
+  };
+  //
+  const drawRulerXBar = () => {
     const width =
       pointsData.length *
       gridSizeX *
       +(init.width / pointsData.length).toFixed(2);
-    let ruler = [];
-    for (let x = 0, g = 0; x <= width; x += ~~gridSizeX, g+=data()) {
+    let ruler: any = [];
+    for (
+      let x = 0, g = 0, index = 0;
+      x <= width;
+      x += ~~gridSizeX, g += xAxis, index++
+    ) {
       ruler.push(
-        <Circle
-          key={x}
-          x={g*6}
-          y={init.height}
-          radius={4}
-          fill={'red'}
-          stroke={'black'}
-          strokeWidth={4}
+        <Line
+          key={g + '_l'}
+          points={[g * 6, init.height, g * 6, init.height - 4 * gridSizeX]}
+          strokeWidth={1}
+          stroke={'#f00'}
         />,
-      )
+        addAxisXText(index, index, g * 6 - 10),
+      );
     }
     return ruler;
-  }
+  };
 
   const drawLine = () => {
     let points: any = [];
@@ -124,22 +177,25 @@ export default function IndexPage() {
 
   const handleChange = (type: any, value: any) => {
     if (type === 'time') {
-      setXAxis(+value)
+      setXAxis(+value);
     } else if (type === 'voltage') {
-      setYAxis(+value)
+      setYAxis(+value);
     }
   };
 
   return (
     <div>
-      <OrderInfo value={{ time: xAxis, voltage: yAxis }} onChange={handleChange}/>
+      <OrderInfo
+        value={{ time: xAxis, voltage: yAxis }}
+        onChange={handleChange}
+      />
       <Stage width={init.width} height={init.height}>
         <Layer>
           <Group name="groupGrid">
             {drawGirdX()}
             {drawGirdY()}
             {drawRulerX()}
-            {drawRulerY()}
+            {/*{drawRulerXBar()}*/}
           </Group>
         </Layer>
         <Layer>
