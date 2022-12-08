@@ -27,7 +27,7 @@ export default function IndexPage() {
   const gridSizeX = 6; //每小格（X轴 0.04/秒，每秒25个
   // Y倍数阈值
   const gridSizeY = 6; //每小格（Y轴 0.1/mv，1mv是2个大格
-  const [xAxis, setXAxis] = useState(50); // time
+  const [xAxis, setXAxis] = useState(25); // time
   const [yAxis, setYAxis] = useState(10); // voltage
 
   const { minValue, maxValue } = getPixelValues(pointsData);
@@ -54,21 +54,12 @@ export default function IndexPage() {
 
   // 垂直线
   const drawGirdX = () => {
-    const width =
-      pointsData.length *
-      gridSizeX *
-      +(init.width / pointsData.length).toFixed(2);
     let items = [];
-    const lineY = init.height - 2 * gridSizeX;
-    const lineBigY = init.height - 4 * gridSizeX;
-
-    // console.log(width, gridSizeX, width/gridSizeX);
     for (
       let x = 0, g = 0, xBar = 0;
-      x <= width;
+      x <= init.width;
       x += ~~gridSizeX, g++, xBar += xAxis
     ) {
-      console.log(444);
       items.push(
         <Line
           key={x}
@@ -78,13 +69,6 @@ export default function IndexPage() {
           offsetX={-0.5}
         />,
         // 刻度
-
-        // g % 5 === 0 && <Line
-        //   key={x+ '_l'}
-        //   points={[x+2, init.height, x+2, g % 50 === 0?lineBigY: lineY]}
-        //   strokeWidth={1}
-        //   stroke={'#00f'}
-        // />,
         <Line
           key={g + '_l'}
           points={[
@@ -104,16 +88,12 @@ export default function IndexPage() {
 
   // 水平线（高度不随着倍数变化
   const drawGirdY = () => {
-    const width =
-      pointsData.length *
-      gridSizeX *
-      +(init.width / pointsData.length).toFixed(2);
     let items = [];
     for (let y = 0, f = 0; y <= init.height; y += ~~gridSizeY, f++) {
       items.push(
         <Line
           key={y}
-          points={[0, y, width, y]}
+          points={[0, y,  init.width, y]}
           stroke={y % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
           strokeWidth={1}
           offsetX={-0.5}
@@ -124,42 +104,14 @@ export default function IndexPage() {
   };
 
   const drawRulerX = () => {
-    const width =
-      pointsData.length *
-      gridSizeX *
-      +(init.width / pointsData.length).toFixed(2);
     return (
       <Line
-        points={[0, init.height, width, init.height]}
+        points={[0, init.height, init.width, init.height]}
         stroke={'red'}
         strokeWidth={4}
         offsetX={-0.5}
       />
     );
-  };
-  //
-  const drawRulerXBar = () => {
-    const width =
-      pointsData.length *
-      gridSizeX *
-      +(init.width / pointsData.length).toFixed(2);
-    let ruler: any = [];
-    for (
-      let x = 0, g = 0, index = 0;
-      x <= width;
-      x += ~~gridSizeX, g += xAxis, index++
-    ) {
-      ruler.push(
-        <Line
-          key={g + '_l'}
-          points={[g * 6, init.height, g * 6, init.height - 4 * gridSizeX]}
-          strokeWidth={1}
-          stroke={'#f00'}
-        />,
-        addAxisXText(index, index, g * 6 - 10),
-      );
-    }
-    return ruler;
   };
 
   const drawLine = () => {
@@ -195,7 +147,6 @@ export default function IndexPage() {
             {drawGirdX()}
             {drawGirdY()}
             {drawRulerX()}
-            {/*{drawRulerXBar()}*/}
           </Group>
         </Layer>
         <Layer>
