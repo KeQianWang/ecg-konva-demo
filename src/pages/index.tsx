@@ -58,22 +58,16 @@ export default function IndexPage() {
   // 垂直线
   const drawGirdX = () => {
     let items = [];
-    for (
-      let x = 0, g = 0, xBar = 0;
-      x <= init.width;
-      x += ~~gridSizeX, g++, xBar += xAxis
-    ) {
-      if (x % gridSizeX === 0) {
-        items.push(
-          <Line
-            key={x}
-            points={[x, 0, x, init.height]}
-            stroke={g % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
-            strokeWidth={1}
-            offsetX={-0.5}
-          />,
-        );
-      }
+    for (let x = 0, g = 0; x <= init.width; x += ~~gridSizeX, g++) {
+      items.push(
+        <Line
+          key={x}
+          points={[x, 0, x, init.height]}
+          stroke={g % 5 === 0 ? '#ADD5B5' : '#D0E8D5'}
+          strokeWidth={1}
+          offsetX={-0.5}
+        />,
+      );
     }
     return items;
   };
