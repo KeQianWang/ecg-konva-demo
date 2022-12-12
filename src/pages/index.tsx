@@ -167,7 +167,7 @@ export default function IndexPage() {
     const items:any = []
     splitData.forEach((item:any,index:number) =>{
       const centerX = ( item[0].x+ item[item.length-1].x )/2
-      const centerY = 50
+      const centerY = 40
       groupPoint.push({ x:centerX,y :centerY});
       items.push(
         <Wedge
@@ -215,6 +215,11 @@ export default function IndexPage() {
         value={{ time: xAxis, voltage: yAxis }}
         onChange={handleChange}
       />
+      <Stage width={init.width + 10} height={50} x={10}>
+        <Layer>
+          {drawTriangle()}
+        </Layer>
+      </Stage>
       <Stage width={init.width + 10} height={init.height} x={10}>
         <Layer>
           <Group name="groupGrid">
@@ -225,7 +230,7 @@ export default function IndexPage() {
         </Layer>
         <Layer>
           <Group name='groupTriangle'>
-            {drawTriangle()}
+            {/*{drawTriangle()}*/}
             {drawRectangle()}
           </Group>
         </Layer>
