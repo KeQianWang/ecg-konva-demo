@@ -1,8 +1,10 @@
-import { Stage, Layer, Line, Group, Text } from 'react-konva';
+import { Stage, Layer, Line, Group, Text, Circle } from 'react-konva';
 // @ts-ignore
 import { pointsData } from '../utils/utils';
 import OrderInfo from '@/pages/components/order-info';
 import { useState } from 'react';
+import React from 'react';
+import * as turf from '@turf/turf'
 
 const getPixelValues = (pixelData: any) => {
   let minPixelValue: number = Number.MAX_VALUE;
@@ -29,6 +31,10 @@ export default function IndexPage() {
   const gridSizeY = 6; //每小格（Y轴 0.1/mv，1mv是2个大格
   const [xAxis, setXAxis] = useState(25); // time
   const [yAxis, setYAxis] = useState(10); // voltage
+  const [dragX, setDragX] = useState(+0);
+  const [dragY, setDragY] = useState(301.28);
+  const [demo, setDemo] = useState([] );
+  const canvasRef = React.useRef();
 
   const totalTime = pointsData.length / sampleRate;
   const { minValue, maxValue } = getPixelValues(pointsData);
@@ -121,6 +127,7 @@ export default function IndexPage() {
     return items;
   };
 
+  let arry:any = []
   const drawLine = () => {
     let points: any = [];
     let positionX = +(init.width / pointsData.length).toFixed(2);
@@ -131,6 +138,8 @@ export default function IndexPage() {
       let y = init.positionY / 2 - positionY * pointsData[i];
       points.push(x);
       points.push(y);
+
+      arry.push({x:x,y:y})
     }
     return points;
   };
@@ -149,7 +158,7 @@ export default function IndexPage() {
         value={{ time: xAxis, voltage: yAxis }}
         onChange={handleChange}
       />
-      <Stage width={init.width + 10} height={init.height} x={10}>
+      <Stage width={init.width + 10} height={init.height} x={10} ref={canvasRef}>
         <Layer>
           <Group name="groupGrid">
             {drawGirdX()}
@@ -159,7 +168,63 @@ export default function IndexPage() {
         </Layer>
         <Layer>
           <Group name="groupLine">
-            <Line points={drawLine()} strokeWidth={1} stroke={'#00000'} />
+            <Line points={drawLine()} strokeWidth={1} stroke={'#00000'} draggable={true}/>
+          </Group>
+          <Group name="groupCirCleLine">
+            <Circle
+              x={1020}
+              y={313.64}
+              fill={'pink'}
+              stroke={'pink'}
+              radius={3}
+            />
+            <Circle
+              x={1034.1}
+              y={307.76}
+              fill={'green'}
+              stroke={'green'}
+              radius={3}
+            />
+            <Line
+              points={demo}
+              stroke={'yellow'}
+              strokeWidth={4}
+              offsetX={-0.5}
+            />
+            <Line
+              points={[dragX, dragY-100, dragX, dragY+100]}
+              stroke={'red'}
+              strokeWidth={4}
+              offsetX={-0.5}
+              draggable={true}
+              onDragEnd={(e) => {
+                const node = canvasRef.current;
+                const pointerPos = node.getPointerPosition();
+                console.log(pointerPos.x,"xxxxxxxxxxxxxx")
+                console.log(arry,777)
+
+                arry.forEach((item:any)=>{
+                  let pt = turf.point([item.x,item.y]);
+                  let line = turf.lineString([[pointerPos.x, dragY-100],[pointerPos.x,dragY+100]]);
+
+                  // @ts-ignore
+                  setDemo([pointerPos.x-6, dragY-100,pointerPos.x-6,dragY+100])
+
+                  let isPointOnLine = turf.booleanPointOnLine(pt, line);
+
+                  if(isPointOnLine){
+                    console.log(isPointOnLine,999,item)
+                    let  point = turf.point([item.x, item.y]);
+                    let isWithin = turf.booleanPointOnLine(point, line);
+                    if(isWithin){
+                      console.log(isWithin,888)
+                    }
+                    setDragX(item.x)
+                    setDragY(item.y)
+                  }
+                })
+              }}
+            />
           </Group>
         </Layer>
       </Stage>
