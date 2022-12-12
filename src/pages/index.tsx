@@ -1,8 +1,10 @@
-import { Stage, Layer, Line, Group, Text } from 'react-konva';
+import { Stage, Layer, Line, Group, Text,Circle ,Wedge,Rect} from 'react-konva';
 // @ts-ignore
-import { pointsData } from '../utils/utils';
+import { pointsData,splitData } from '../utils/utils';
 import OrderInfo from '@/pages/components/order-info';
 import { useState } from 'react';
+import * as turf from '@turf/turf'
+import _ from 'lodash';
 
 const getPixelValues = (pixelData: any) => {
   let minPixelValue: number = Number.MAX_VALUE;
@@ -29,6 +31,7 @@ export default function IndexPage() {
   const gridSizeY = 6; //每小格（Y轴 0.1/mv，1mv是2个大格
   const [xAxis, setXAxis] = useState(25); // time
   const [yAxis, setYAxis] = useState(10); // voltage
+  const [rectPoint, setRectPoint] = useState<any>([]); // voltage
 
   const totalTime = pointsData.length / sampleRate;
   const { minValue, maxValue } = getPixelValues(pointsData);
@@ -54,7 +57,6 @@ export default function IndexPage() {
       />
     );
   };
-
   // 垂直线
   const drawGirdX = () => {
     let items = [];
@@ -71,7 +73,6 @@ export default function IndexPage() {
     }
     return items;
   };
-
   // 水平线（高度不随着倍数变化
   const drawGirdY = () => {
     let items = [];
@@ -88,7 +89,7 @@ export default function IndexPage() {
     }
     return items;
   };
-
+  // 画尺子
   const drawRulerX = () => {
     let items: any = [];
     for (let x = 0; x <= init.width; x += init.pxPerMS) {
@@ -120,7 +121,8 @@ export default function IndexPage() {
     );
     return items;
   };
-
+  // 根据坐标画波动
+  const xyData:any = []
   const drawLine = () => {
     let points: any = [];
     let positionX = +(init.width / pointsData.length).toFixed(2);
@@ -131,10 +133,75 @@ export default function IndexPage() {
       let y = init.positionY / 2 - positionY * pointsData[i];
       points.push(x);
       points.push(y);
+      xyData.push({
+        x:x,
+        y:y
+      })
     }
+    console.log(xyData)
     return points;
   };
-
+  // 画矩形
+  const drawRectangle = ()=>{
+    if(rectPoint.length > 0){
+      const fx = rectPoint[0].x
+      const ex = rectPoint[rectPoint.length - 1].x
+      return (
+        <Rect
+          x={fx}
+          y={0}
+          width={ex-fx}
+          height={init.height}
+          shadowBlur={10}
+          stroke={'blue'}
+          dash={[10, 5]}
+        />
+      )
+    } else{
+      return ""
+    }
+  }
+  // 画三角形
+  const drawTriangle = () =>{
+    const groupPoint:any = []
+    const items:any = []
+    splitData.forEach((item:any,index:number) =>{
+      const centerX = ( item[0].x+ item[item.length-1].x )/2
+      const centerY = 50
+      groupPoint.push({ x:centerX,y :centerY});
+      items.push(
+        <Wedge
+          key={index}
+          x={centerX}
+          y={centerY}
+          radius={8}
+          fill={'black'}
+          stroke={'blackd'}
+          strokeWidth={3}
+          angle={60}
+          rotation={-120}
+          onClick={()=>setRectPoint(item)}
+        />,
+        <Text
+          key={index + 'N'}
+          text={'N'}
+          x={centerX-5}
+          y={centerY-35}
+          fill={'black'}
+          fontSize={15}
+        />,
+        <Text
+          key={index + '_t'}
+          text={'68\n883'}
+          x={centerX+40}
+          y={centerY-25}
+          fill={'black'}
+          fontSize={15}
+        />,
+      )
+    })
+    return items
+  }
   const handleChange = (type: any, value: any) => {
     if (type === 'time') {
       setXAxis(+value);
@@ -142,7 +209,6 @@ export default function IndexPage() {
       setYAxis(+value);
     }
   };
-
   return (
     <div>
       <OrderInfo
@@ -155,6 +221,12 @@ export default function IndexPage() {
             {drawGirdX()}
             {drawGirdY()}
             {drawRulerX()}
+          </Group>
+        </Layer>
+        <Layer>
+          <Group name='groupTriangle'>
+            {drawTriangle()}
+            {drawRectangle()}
           </Group>
         </Layer>
         <Layer>
