@@ -137,8 +137,8 @@ export default function IndexPage() {
         x:x,
         y:y
       })
+      // console.log(xyData,"=====mock数据用xyData======")
     }
-    console.log(xyData)
     return points;
   };
   // 画矩形
